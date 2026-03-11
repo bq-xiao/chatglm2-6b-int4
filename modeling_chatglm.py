@@ -859,6 +859,16 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
 
         if self.config.quantization_bit:
             self.quantize(self.config.quantization_bit, empty_init=True)
+    @staticmethod
+    def _extract_past_from_model_output(outputs: ModelOutput):
+        past_key_values = None
+        if "past_key_values" in outputs:
+            past_key_values = outputs.past_key_values
+        elif "mems" in outputs:
+            past_key_values = outputs.mems
+        elif "past_buckets_states" in outputs:
+            past_key_values = outputs.past_buckets_states
+        return past_key_values
 
     def _update_model_kwargs_for_generation(
             self,
@@ -868,9 +878,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             standardize_cache_format: bool = False,
     ) -> Dict[str, Any]:
         # update past_key_values
-        model_kwargs["past_key_values"] = self._extract_past_from_model_output(
-            outputs, standardize_cache_format=standardize_cache_format
-        )
+        model_kwargs["past_key_values"] = self._extract_past_from_model_output(outputs)
 
         # update attention mask
         if "attention_mask" in model_kwargs:
