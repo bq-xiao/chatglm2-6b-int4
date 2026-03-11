@@ -1020,7 +1020,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             prompt = "\n\n[Round {}]\n\n问：{}\n\n答：".format(len(history) + 1, query)
             input_ids = tokenizer.encode(prompt, add_special_tokens=False)
             input_ids = input_ids[1:]
-            inputs = tokenizer._batch_encode_plus([(input_ids, None)], return_tensors="pt", add_special_tokens=False)
+            inputs = tokenizer.batch_encode_plus([(input_ids, None)], return_tensors="pt", add_special_tokens=False)
         else:
             prompt = "[Round {}]\n\n问：{}\n\n答：".format(len(history) + 1, query)
             inputs = tokenizer([prompt], return_tensors="pt")

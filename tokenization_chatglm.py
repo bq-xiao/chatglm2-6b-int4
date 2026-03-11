@@ -1,10 +1,11 @@
 import os
-import torch
 from typing import List, Optional, Union, Dict
+
 from sentencepiece import SentencePieceProcessor
-from transformers import PreTrainedTokenizer
-from transformers.utils import logging, PaddingStrategy
-from transformers.tokenization_utils_base import EncodedInput, BatchEncoding
+from transformers import PreTrainedTokenizer, TensorType
+from transformers.tokenization_utils_base import EncodedInput, BatchEncoding, TextInput, TextInputPair, \
+    PreTokenizedInput, PreTokenizedInputPair, EncodedInputPair, TruncationStrategy
+from transformers.utils import PaddingStrategy
 
 
 class SPTokenizer:
@@ -256,3 +257,54 @@ class ChatGLMTokenizer(PreTrainedTokenizer):
             encoded_inputs[self.model_input_names[0]] = [self.pad_token_id] * difference + required_input
 
         return encoded_inputs
+
+    def batch_encode_plus(
+            self,
+            batch_text_or_text_pairs: Union[
+                list[TextInput],
+                list[TextInputPair],
+                list[PreTokenizedInput],
+                list[PreTokenizedInputPair],
+                list[EncodedInput],
+                list[EncodedInputPair],
+            ],
+            add_special_tokens: bool = True,
+            padding: Union[bool, str, PaddingStrategy] = False,
+            truncation: Union[bool, str, TruncationStrategy, None] = None,
+            max_length: Optional[int] = None,
+            stride: int = 0,
+            is_split_into_words: bool = False,
+            pad_to_multiple_of: Optional[int] = None,
+            padding_side: Optional[str] = None,
+            return_tensors: Optional[Union[str, TensorType]] = None,
+            return_token_type_ids: Optional[bool] = None,
+            return_attention_mask: Optional[bool] = None,
+            return_overflowing_tokens: bool = False,
+            return_special_tokens_mask: bool = False,
+            return_offsets_mapping: bool = False,
+            return_length: bool = False,
+            verbose: bool = True,
+            split_special_tokens: bool = False,
+            **kwargs,
+    ) -> BatchEncoding:
+        return super().batch_encode_plus(
+                batch_text_or_text_pairs=batch_text_or_text_pairs,
+                add_special_tokens=add_special_tokens,
+                padding=padding,
+                truncation=truncation,
+                max_length=max_length,
+                stride=stride,
+                is_split_into_words=is_split_into_words,
+                pad_to_multiple_of=pad_to_multiple_of,
+                padding_side=padding_side,
+                return_tensors=return_tensors,
+                return_token_type_ids=return_token_type_ids,
+                return_attention_mask=return_attention_mask,
+                return_overflowing_tokens=return_overflowing_tokens,
+                return_special_tokens_mask=return_special_tokens_mask,
+                return_offsets_mapping=return_offsets_mapping,
+                return_length=return_length,
+                verbose=verbose,
+                split_special_tokens=split_special_tokens,
+                **kwargs,
+        )
