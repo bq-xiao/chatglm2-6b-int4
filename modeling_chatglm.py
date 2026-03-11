@@ -855,6 +855,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         self.transformer = ChatGLMModel(config, empty_init=empty_init, device=device)
         self.config = config
         self.quantized = False
+        self.all_tied_weights_keys = {}
 
         if self.config.quantization_bit:
             self.quantize(self.config.quantization_bit, empty_init=True)
