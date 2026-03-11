@@ -2,7 +2,8 @@ import os
 from typing import List, Optional, Union, Dict
 
 from sentencepiece import SentencePieceProcessor
-from transformers.tokenization_utils_base import EncodedInput, BatchEncoding, PreTrainedTokenizerBase
+from transformers import PreTrainedTokenizer
+from transformers.tokenization_utils_base import EncodedInput, BatchEncoding
 from transformers.utils import PaddingStrategy
 
 
@@ -59,7 +60,7 @@ class SPTokenizer:
         return self.sp_model.IdToPiece(index)
 
 
-class ChatGLMTokenizer(PreTrainedTokenizerBase):
+class ChatGLMTokenizer(PreTrainedTokenizer):
     vocab_files_names = {"vocab_file": "tokenizer.model"}
 
     model_input_names = ["input_ids", "attention_mask", "position_ids"]
