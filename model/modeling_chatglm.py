@@ -22,7 +22,7 @@ from transformers.modeling_outputs import (
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
-from configuration_chatglm import ChatGLMConfig
+from .configuration_chatglm import ChatGLMConfig
 
 # flags required to enable jit fusion kernels
 
@@ -872,6 +872,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
 
         if self.config.quantization_bit:
             self.quantize(self.config.quantization_bit, empty_init=True)
+
     @staticmethod
     def _extract_past_from_model_output(outputs: ModelOutput):
         past_key_values = None
@@ -1172,7 +1173,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         stopping_criteria = self._get_stopping_criteria(
             generation_config=generation_config, stopping_criteria=stopping_criteria
         )
-        #logits_warper = self._get_logits_warper(generation_config)
+        # logits_warper = self._get_logits_warper(generation_config)
 
         unfinished_sequences = input_ids.new(input_ids.shape[0]).fill_(1)
         scores = None
@@ -1190,7 +1191,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
 
             # pre-process distribution
             next_token_scores = logits_processor(input_ids, next_token_logits)
-            #next_token_scores = logits_warper(input_ids, next_token_scores)
+            # next_token_scores = logits_warper(input_ids, next_token_scores)
 
             # sample
             probs = nn.functional.softmax(next_token_scores, dim=-1)
