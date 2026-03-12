@@ -7,7 +7,9 @@
   "auto_map": {
     "AutoConfig": "configuration_chatglm.ChatGLMConfig",
     "AutoModel": "modeling_chatglm.ChatGLMForConditionalGeneration",
-    "AutoModelForSeq2SeqLM": "modeling_chatglm.ChatGLMForConditionalGeneration"
+    "AutoModelForCausalLM": "modeling_chatglm.ChatGLMForConditionalGeneration",
+    "AutoModelForSeq2SeqLM": "modeling_chatglm.ChatGLMForConditionalGeneration",
+    "AutoModelForSequenceClassification": "modeling_chatglm.ChatGLMForSequenceClassification"
   },
   "add_bias_linear": false,
   "add_qkv_bias": true,
@@ -29,7 +31,6 @@
   "original_rope": true,
   "padded_vocab_size": 65024,
   "post_layer_norm": true,
-  "quantization_bit": 4,
   "rmsnorm": true,
   "seq_length": 32768,
   "use_cache": true,
