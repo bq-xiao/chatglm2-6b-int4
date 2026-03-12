@@ -1,20 +1,19 @@
 """ PyTorch ChatGLM model. """
 
-import math
 import copy
-import warnings
-import re
+import math
 import sys
-
-import torch
-import torch.utils.checkpoint
-import torch.nn.functional as F
-from torch import nn
-from torch.nn import CrossEntropyLoss, LayerNorm
-from torch.nn import CrossEntropyLoss, LayerNorm, MSELoss, BCEWithLogitsLoss
-from torch.nn.utils import skip_init
+import warnings
 from typing import Optional, Tuple, Union, List, Callable, Dict, Any
 
+import torch
+import torch.nn.functional as F
+import torch.utils.checkpoint
+from torch import nn
+from torch.nn import CrossEntropyLoss, LayerNorm, MSELoss, BCEWithLogitsLoss
+from torch.nn.utils import skip_init
+from transformers.generation.logits_process import LogitsProcessor
+from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList, GenerationConfig, ModelOutput
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
@@ -22,10 +21,8 @@ from transformers.modeling_outputs import (
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
-from transformers.generation.logits_process import LogitsProcessor
-from transformers.generation.utils import LogitsProcessorList, StoppingCriteriaList, GenerationConfig, ModelOutput
 
-from .configuration_chatglm import ChatGLMConfig
+from configuration_chatglm import ChatGLMConfig
 
 # flags required to enable jit fusion kernels
 
@@ -670,9 +667,25 @@ class ChatGLMPreTrainedModel(PreTrainedModel):
     base_model_prefix = "transformer"
     _no_split_modules = ["GLMBlock"]
 
-    def _init_weights(self, module: nn.Module):
-        """Initialize the weights."""
-        return
+    def _init_weights(self, module):
+        """Initialize the weights"""
+        if isinstance(module, nn.Linear):
+            # Slightly different from the TF version which uses truncated_normal for initialization
+            # cf https://github.com/pytorch/pytorch/pull/5617
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
+            if module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.Embedding):
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
+            if module.padding_idx is not None:
+                module.weight.data[module.padding_idx].zero_()
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
+        elif isinstance(module, RMSNorm):
+            module.weight.data.fill_(1.0)
 
     def get_masks(self, input_ids, past_key_values, padding_mask=None):
         batch_size, seq_length = input_ids.shape
@@ -1098,11 +1111,22 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         if generation_config is None:
             generation_config = self.generation_config
         generation_config = copy.deepcopy(generation_config)
-        generation_config._eos_token_tensor = None
         model_kwargs = generation_config.update(**kwargs)
         model_kwargs["use_cache"] = generation_config.use_cache
         bos_token_id, eos_token_id = generation_config.bos_token_id, generation_config.eos_token_id
 
+        def _tensor_or_none(token, device=None):
+            if token is None:
+                return token
+
+            device = device if device is not None else self.device
+            if isinstance(token, torch.Tensor):
+                return token.to(device)
+            return torch.tensor(token, device=device, dtype=torch.long)
+
+        generation_config._bos_token_tensor = _tensor_or_none(generation_config.bos_token_id, device=input_ids.device)
+        generation_config._eos_token_tensor = _tensor_or_none(generation_config.eos_token_id, device=input_ids.device)
+        generation_config._pad_token_tensor = _tensor_or_none(generation_config.pad_token_id, device=input_ids.device)
         if isinstance(eos_token_id, int):
             eos_token_id = [eos_token_id]
 
