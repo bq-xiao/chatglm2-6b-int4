@@ -36,18 +36,30 @@ ChatGLM**2**-6B is the second-generation version of the open-source bilingual (C
 
 ## 软件依赖
 
+1.安装transformers依赖
 ```shell
-pip install protobuf transformers==4.30.2 cpm_kernels torch>=2.0 gradio mdtex2html sentencepiece accelerate
+pip install protobuf transformers==4.57.1 cpm_kernels torch>=2.0 gradio mdtex2html sentencepiece accelerate
+```
+
+2.下载模型仓库
+```shell
+git clone https://github.com/bq-xiao/chatglm2-6b-model.git
+```
+
+3.下载模型权重文件
+```shell
+!hf download THUDM/chatglm2-6b tokenizer.model pytorch_model-00001-of-00007.bin pytorch_model-00002-of-00007.bin pytorch_model-00003-of-00007.bin pytorch_model-00004-of-00007.bin pytorch_model-00005-of-00007.bin pytorch_model-00006-of-00007.bin pytorch_model-00007-of-00007.bin --local-dir chatglm2-6b-model
 ```
 
 ## 代码调用 
+**从本地目录xx/path/chatglm2-6b-model加载模型**
 
 可以通过如下代码调用 ChatGLM-6B 模型来生成对话：
 
 ```ipython
 >>> from transformers import AutoTokenizer, AutoModel
->>> tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True)
->>> model = AutoModel.from_pretrained("THUDM/chatglm2-6b", trust_remote_code=True).half().cuda()
+>>> tokenizer = AutoTokenizer.from_pretrained("xx/path/chatglm2-6b-model", trust_remote_code=True)
+>>> model = AutoModel.from_pretrained("xx/path/chatglm2-6b-model", trust_remote_code=True).half().cuda()
 >>> model = model.eval()
 >>> response, history = model.chat(tokenizer, "你好", history=[])
 >>> print(response)
